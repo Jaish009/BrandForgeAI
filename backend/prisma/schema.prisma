@@ -1,0 +1,189 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum ProductType {
+  TSHIRT
+  HOODIE
+  MUG
+  PHONECASE
+  CAP
+}
+
+enum Section {
+  catalog
+  featured
+}
+
+enum OrderStatus {
+  pending
+  failed
+  awaiting_shipment
+  shipped
+  fulfilled
+}
+
+model Product {
+  id        String      @id @default(uuid())
+  type      ProductType
+  template  Boolean     @default(false)
+  section   Section     @default(catalog)
+  name      String
+  body      String
+  displayUrl String
+
+  // Template-only fields
+  basePrice Float?
+  baseUrl   String?
+  sizes     String[]  // ["S", "M", "L", "XL", "2XL"]
+
+  // Printable area (flattened from embedded object)
+  printableAreaTop    Int?
+  printableAreaLeft   Int?
+  printableAreaWidth  Int?
+  printableAreaHeight Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  colors   ProductColor[]
+  listings Listing[]
+}
+
+model ProductColor {
+  id         String  @id @default(uuid())
+  templateId String
+  template   Product @relation(fields: [templateId], references: [id])
+  name       String
+  color      String
+  mockupUrl  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listings ListingColor[]
+  orders   Order[]
+}
+
+model Listing {
+  id           String  @id @default(uuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId   String
+  template     Product @relation(fields: [templateId], references: [id])
+  slug         String  @unique
+  title        String
+  description  String  @default("")
+  sellingPrice Float
+
+  artworkUrl                      String
+  artworkPlacementTop             Float
+  artworkPlacementLeft            Float
+  artworkPlacementWidth           Float
+  artworkPlacementHeight          Float
+  artworkPlacementRefDisplayWidth Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  colors ListingColor[]
+  orders Order[]
+}
+
+// Junction table for many-to-many: Listing <-> ProductColor
+model ListingColor {
+  listingId String
+  listing   Listing      @relation(fields: [listingId], references: [id])
+  colorId   String
+  color     ProductColor @relation(fields: [colorId], references: [id])
+
+  @@id([listingId, colorId])
+}
+
+model Order {
+  id            String       @id @default(uuid())
+  listingId     String
+  listing       Listing      @relation(fields: [listingId], references: [id])
+  colorId       String
+  color         ProductColor @relation(fields: [colorId], references: [id])
+  size          String
+  customerName  String
+  customerEmail String
+  amount        Float
+  isPaid        Boolean      @default(false)
+  status        OrderStatus  @default(pending)
+
+  // Shipping address (flattened)
+  shippingStreet      String
+  shippingCity        String
+  shippingPostalCode  String
+  shippingCountry     String
+  shippingState       String
+  shippingPhoneNumber String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  listings      Listing[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
