@@ -3,7 +3,6 @@ console.log("BACKEND STARTING - LOGGING ACTIVE");
 import express, { Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import path from "path";
 import { toNodeHandler } from "better-auth/node";
 import { HTTPSTATUS } from "./config/http.config";
 import { Env } from "./config/env.config";
@@ -50,17 +49,8 @@ app.get("/health", asyncHandler(async (req: Request, res: Response) => {
 
 app.use("/api", routes)
 
-if (Env.NODE_ENV === "production") {
-  const clientPath = path.resolve(__dirname, "../../client/dist");
 
-  //Serve static files
-  app.use(express.static(clientPath));
 
-  // Serve index.html for all non-API routes (SPA fallback)
-  app.get(/^(?!\/api).*/, (req: Request, res: Response) => {
-    res.sendFile(path.join(clientPath, "index.html"));
-  });
-}
 
 app.use(errorHandler)
 

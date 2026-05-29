@@ -7,6 +7,8 @@ import { Env } from "../config/env.config";
 import { compareValue, hashValue } from "../utils/bcrypt";
 
 export const getAuth = () => {
+  const isProduction = process.env.NODE_ENV === "production";
+
   return betterAuth({
     baseURL: Env.BETTER_AUTH_URL,
     secret: Env.BETTER_AUTH_SECRET,
@@ -29,7 +31,15 @@ export const getAuth = () => {
       }
     },
     advanced: {
-      crossSourced: true,
+      crossSubDomainCookies: {
+        enabled: false,
+      },
+      defaultCookieAttributes: {
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        partitioned: isProduction,
+      },
+      useSecureCookies: isProduction,
       cookiePrefix: "Brandforge-ai",
       cookies: {
         session_token: {
