@@ -18,9 +18,25 @@ import webhookRoutes from "./routes/webhook.route";
 
 const app = express();
 
+const allowedOriginPatterns = [
+  Env.FRONTEND_ORIGIN,
+  /\.vercel\.app$/,
+];
+
 app.use(
   cors({
-    origin: [Env.FRONTEND_ORIGIN],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, health checks)
+      if (!origin) return callback(null, true);
+
+      const isAllowed = allowedOriginPatterns.some((pattern) =>
+        typeof pattern === "string"
+          ? pattern === origin
+          : pattern.test(origin)
+      );
+      if (isAllowed) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

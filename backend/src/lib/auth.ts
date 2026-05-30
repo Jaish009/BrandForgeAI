@@ -12,7 +12,12 @@ export const getAuth = () => {
   return betterAuth({
     baseURL: Env.BETTER_AUTH_URL,
     secret: Env.BETTER_AUTH_SECRET,
-    trustedOrigins: [Env.FRONTEND_ORIGIN],
+    trustedOrigins: (request) => {
+      const origin = request?.headers?.get?.("origin") || "";
+      const origins = [Env.FRONTEND_ORIGIN];
+      if (/\.vercel\.app$/.test(origin)) origins.push(origin);
+      return origins;
+    },
     database: prismaAdapter(prisma, {
       provider: "postgresql",
     }),
