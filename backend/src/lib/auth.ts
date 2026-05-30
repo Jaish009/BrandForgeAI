@@ -42,7 +42,7 @@ export const getAuth = () => {
       defaultCookieAttributes: {
         secure: isProduction,
         sameSite: isProduction ? "none" : "lax",
-        partitioned: isProduction,
+        partitioned: false,
       },
       useSecureCookies: isProduction,
       cookiePrefix: "Brandforge-ai",
