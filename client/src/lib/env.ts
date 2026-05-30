@@ -4,9 +4,10 @@
 
 const isProd = import.meta.env.PROD;
 
-export const ENV = {
-    API_URL: isProd ? '/api' : `${import.meta.env.VITE_API_URL}`,
-    FRONTEND_URL: `${import.meta.env.VITE_FRONTEND_URL}`,
-    BASE_API_URL: isProd ? '/api/auth' : `${import.meta.env.VITE_BASE_API_URL}`
+const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
+export const ENV = {
+    API_URL: isProd ? `${origin}/api` : `${import.meta.env.VITE_API_URL}`,
+    FRONTEND_URL: `${import.meta.env.VITE_FRONTEND_URL}`,
+    BASE_API_URL: isProd ? `${origin}/api/auth` : `${import.meta.env.VITE_BASE_API_URL}`
 };
